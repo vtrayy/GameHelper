@@ -60,8 +60,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.AGITHUB_TOKEN }}
       - name: create-release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1        
         with:
           files: 'build/app/signed/**'
  
