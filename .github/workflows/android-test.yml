@@ -29,15 +29,34 @@ jobs:
           chmod 777 ./gradlew 
           ./gradlew :inrt:assemble 
           ./gradlew :app:assembleCommon
-        
+      
+      - uses: Tlaster/android-sign@v1.2.2
+        name: Sign app APK
+        with:
+          releaseDirectory: |
+            app/build/outputs/apk/common/release
+          signingKeyBase64: ${{ secrets.ASIGNING_KEY }}
+          output: build/app/signed
+          alias: ${{ secrets.AALIAS }}
+          keyStorePassword: ${{ secrets.AKEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.AKEY_PASSWORD }}
+        env: 
+          BUILD_TOOLS_VERSION: "34.0.0"  
+     
       - name: upload v8a apk
         uses: actions/upload-artifact@v3
         with:
-          name: v8(no signing)
-          path: app/build/outputs/apk/common/release/app-common-arm64-v8a-*.apk
+          name: v8a
+          path: build/app/signed/app-common-arm64-v8a-*.apk
        
       - name: upload v7a apk
         uses: actions/upload-artifact@v3
         with: 
-          name: v7(no signing)
-          path: app/build/outputs/apk/common/release/app-common-armeabi-v7a-*.apk
+          name: v7a
+          path: build/app/signed/app-common-armeabi-v7a-*.apk
+    
+      - name: upload universal apk
+        uses: actions/upload-artifact@v3
+        with: 
+          name: universal
+          path: build/app/signed/app-common-universal-*.apk
