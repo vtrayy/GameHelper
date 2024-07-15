@@ -1,17 +1,23 @@
 package org.autojs.autojs.ui.main.scripts
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,7 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
@@ -38,11 +44,11 @@ import org.autojs.autojs.model.explorer.ExplorerDirPage
 import org.autojs.autojs.model.explorer.Explorers
 import org.autojs.autojs.model.script.Scripts.edit
 import org.autojs.autojs.ui.build.ProjectConfigActivity
-import org.autojs.autojs.ui.build.ProjectConfigActivity_
 import org.autojs.autojs.ui.common.ScriptOperations
 import org.autojs.autojs.ui.explorer.ExplorerViewKt
 import org.autojs.autojs.ui.main.rememberExternalStoragePermissionsState
 import org.autojs.autojs.ui.main.showExternalStoragePermissionToast
+import org.autojs.autojs.ui.util.launchActivity
 import org.autojs.autojs.ui.viewmodel.ExplorerItemList.SortConfig
 import org.autojs.autojs.ui.widget.fillMaxSize
 import org.autojs.autoxjs.R
@@ -62,12 +68,10 @@ class ScriptListFragment : Fragment() {
     ): View {
         explorerView.setUpViews()
         return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    floatingActionButton = {
-//                        FloatingButton()
-                    },
                 ) {
                     AndroidView(
                         modifier = Modifier.padding(it),
@@ -78,14 +82,10 @@ class ScriptListFragment : Fragment() {
         }
     }
 
-    @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class
-    )
+    @OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
     @Composable
     private fun FloatingButton() {
         var speedDialState by rememberSaveable { mutableStateOf(SpeedDialState.Collapsed) }
-        val context = LocalContext.current
         SpeedDial(
             state = speedDialState,
             onFabClick = { expanded ->
@@ -96,51 +96,49 @@ class ScriptListFragment : Fragment() {
                 Icon(
                     Icons.Default.Add,
                     null,
-                    tint = MaterialTheme.colors.onSecondary
+                    tint = MaterialTheme.colorScheme.onSecondary
                 )
             },
             fabOpenedContent = {
                 Icon(
                     Icons.Default.Close,
                     null,
-                    tint = MaterialTheme.colors.onSecondary
+                    tint = MaterialTheme.colorScheme.onSecondary
                 )
             },
         ) {
-            this.items(context)
+            this.items(requireContext())
         }
     }
 
     private fun SpeedDialScope.items(context: Context) {
         item {
-            NewDirectory(context)
+            NewDirectory()
         }
         item {
-            NewFile(context)
+            NewFile()
         }
         item {
-            ImportFile(context)
+            ImportFile()
         }
         item {
             NewProject(context)
         }
     }
 
-    @OptIn(
-        ExperimentalMaterialApi::class
-    )
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     private fun NewProject(context: Context) {
         FabWithLabel(
             onClick = {
                 val explorerView = this@ScriptListFragment.explorerView
-                ProjectConfigActivity_.intent(context)
-                    .extra(
+                context.launchActivity<ProjectConfigActivity> {
+                    putExtra(
                         ProjectConfigActivity.EXTRA_PARENT_DIRECTORY,
                         explorerView.currentPage?.path
                     )
-                    .extra(ProjectConfigActivity.EXTRA_NEW_PROJECT, true)
-                    .start()
+                    putExtra(ProjectConfigActivity.EXTRA_NEW_PROJECT, true)
+                }
             },
             labelContent = { Text(text = stringResource(id = R.string.text_project)) },
         ) {
@@ -148,22 +146,28 @@ class ScriptListFragment : Fragment() {
         }
     }
 
-    @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalPermissionsApi::class
-    )
+    @OptIn(ExperimentalMaterialApi::class, ExperimentalPermissionsApi::class)
     @Composable
-    private fun ImportFile(context: Context) {
+    private fun ImportFile() {
         val permission = rememberExternalStoragePermissionsState {
             if (it) getScriptOperations(
-                context,
                 this@ScriptListFragment
             ).importFile()
-            else showExternalStoragePermissionToast(context)
+            else showExternalStoragePermissionToast(requireContext())
         }
         FabWithLabel(
             onClick = {
-                permission.launchMultiplePermissionRequest()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (Environment.isExternalStorageManager()) {
+                        getScriptOperations(
+                            this@ScriptListFragment
+                        ).importFile()
+                    } else {
+                        showExternalStoragePermissionToast(requireContext())
+                    }
+                } else {
+                    permission.launchMultiplePermissionRequest()
+                }
             },
             labelContent = { Text(text = stringResource(id = R.string.text_import)) },
         ) {
@@ -174,22 +178,28 @@ class ScriptListFragment : Fragment() {
         }
     }
 
-    @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalPermissionsApi::class
-    )
+    @OptIn(ExperimentalMaterialApi::class, ExperimentalPermissionsApi::class)
     @Composable
-    private fun NewFile(context: Context) {
+    private fun NewFile() {
         val permission = rememberExternalStoragePermissionsState {
             if (it) getScriptOperations(
-                context,
                 this@ScriptListFragment
             ).newFile()
-            else showExternalStoragePermissionToast(context)
+            else showExternalStoragePermissionToast(requireContext())
         }
         FabWithLabel(
             onClick = {
-                permission.launchMultiplePermissionRequest()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (Environment.isExternalStorageManager()) {
+                        getScriptOperations(
+                            this@ScriptListFragment
+                        ).newFile()
+                    } else {
+                        showExternalStoragePermissionToast(requireContext())
+                    }
+                } else {
+                    permission.launchMultiplePermissionRequest()
+                }
             },
             labelContent = { Text(text = stringResource(id = R.string.text_file)) },
         ) {
@@ -202,17 +212,26 @@ class ScriptListFragment : Fragment() {
 
     @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterialApi::class)
     @Composable
-    private fun NewDirectory(context: Context) {
+    private fun NewDirectory() {
         val permission = rememberExternalStoragePermissionsState {
             if (it) getScriptOperations(
-                context,
                 this@ScriptListFragment
             ).newDirectory()
-            else showExternalStoragePermissionToast(context)
+            else showExternalStoragePermissionToast(requireContext())
         }
         FabWithLabel(
             onClick = {
-                permission.launchMultiplePermissionRequest()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (Environment.isExternalStorageManager()) {
+                        getScriptOperations(
+                            this@ScriptListFragment
+                        ).newDirectory()
+                    } else {
+                        showExternalStoragePermissionToast(requireContext())
+                    }
+                } else {
+                    permission.launchMultiplePermissionRequest()
+                }
             },
             labelContent = { Text(text = stringResource(id = R.string.text_directory)) },
         ) {
@@ -255,12 +274,11 @@ class ScriptListFragment : Fragment() {
     }
 
     private fun getScriptOperations(
-        context: Context,
         scriptListFragment: ScriptListFragment
     ): ScriptOperations {
         val explorerView = scriptListFragment.explorerView
         return ScriptOperations(
-            context,
+            requireContext(),
             explorerView,
             explorerView.currentPage
         )
