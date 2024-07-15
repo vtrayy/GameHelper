@@ -1,6 +1,4 @@
 name: Android CI build
-permissions:
-  contents: write
 on:
   workflow_dispatch:
   push:
@@ -19,27 +17,27 @@ jobs:
         id: check
         uses: actions/checkout@v4
       - name: set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Build inrt template
         run: |
           chmod 777 ./gradlew
-          ./gradlew inrt:assemble
+          ./gradlew app:buildTemplateApp
       - name: Build App
         run: |
-          ./gradlew app:assembleCommon
+          ./gradlew app:assembleV6
       - uses: Tlaster/android-sign@v1.2.2
         name: Sign app APK
         with:
           releaseDirectory: |
-            app/build/outputs/apk/common/release
+            app/build/outputs/apk/v6/release
           signingKeyBase64: ${{ secrets.ASIGNING_KEY }}
           output: build/app/signed
           alias: ${{ secrets.AALIAS }}
@@ -50,23 +48,31 @@ jobs:
       - name: rename apk
         run: |
           cd build/app/signed
-          mv app-common-arm64-v8a-*.apk GameHelper-arm64-v8a-release-${{steps.vars.outputs.short_ref}}.apk
-          mv app-common-armeabi-v7a-*.apk GameHelper-armeabi-v7a-release-${{steps.vars.outputs.short_ref}}.apk
-          mv app-common-universal-*.apk GameHelper-universal-release-${{steps.vars.outputs.short_ref}}.apk
+          mv app-v6-arm64-v8a-*.apk Autox-v6-arm64-v8a-release-${{steps.vars.outputs.short_ref}}.apk
+          mv app-v6-armeabi-v7a-*.apk Autox-v6-armeabi-v7a-release-${{steps.vars.outputs.short_ref}}.apk
+          mv app-v6-universal-*.apk Autox-v6-universal-release-${{steps.vars.outputs.short_ref}}.apk
           ls
-      
-      - name: Create Release
-        id: create_release
-        if: github.repository == 'vtrayy/GameHelper'
+      - name: create-gh-release
+        if: github.repository == 'kkevsekk1/AutoX'
         uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
         env:
-          GITHUB_TOKEN: ${{ secrets.AGITHUB_TOKEN }}
-      
-      - name: Upload APK to Release
-        uses: softprops/action-gh-release@v1
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: create-release
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-         token: ${{ secrets.GITHUB_TOKEN }}
-         files: 'build/app/signed/**'    
+          files: 'build/app/signed/**'
+      - name: setup aliyun oss
+        if: github.repository == 'kkevsekk1/AutoX'
+        uses: manyuanrong/setup-ossutil@master
+        with:
+          endpoint: oss-cn-hangzhou.aliyuncs.com
+          access-key-id: ${{ secrets.OSS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_KEY_SECRET }}
+      - name: update apk to aliyun
+        if: github.repository == 'kkevsekk1/AutoX'
+        run: |
+          ossutil mkdir oss://autoxjsoss/autoxjs/${{ steps.vars.outputs.short_ref }}
+          ossutil cp -rf build/app/signed oss://autoxjsoss/autoxjs/${{ steps.vars.outputs.short_ref }}

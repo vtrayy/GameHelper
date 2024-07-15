@@ -3,22 +3,13 @@ import okhttp3.Request
 import okio.use
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.autojs.android.library)
     id("com.yanzhenjie.andserver")
     id("kotlin-kapt")
 }
 
 android {
     namespace = "com.aiselp.autojs.codeeditor"
-    compileSdk = versions.compile
-
-    defaultConfig {
-        minSdk = versions.mini
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
     buildFeatures {
         viewBinding = true
     }
@@ -32,14 +23,12 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = versions.javaVersion
-        targetCompatibility = versions.javaVersion
-    }
 }
 
 dependencies {
-    implementation(platform(libs.compose.bom))
+    implementation(projects.autojs)
+
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.andserver.api)
     implementation(libs.androidx.constraintlayout)
     kapt(libs.andserver.processor)
@@ -50,7 +39,6 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation(project(":autojs"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

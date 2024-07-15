@@ -15,11 +15,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.autojs.autojs.Pref
-import org.autojs.autojs.network.VersionService2
-import org.autojs.autojs.network.entity.GithubReleaseInfo
-import org.autojs.autojs.network.entity.isLatestVersion
+import org.autojs.autojs.core.model.github.GithubReleaseInfo
+import org.autojs.autojs.core.network.VersionService2
 import org.autojs.autoxjs.R
 import java.io.File
+import org.autojs.autoxjs.BuildConfig
 
 class DrawerViewModel(private val context: Application) : AndroidViewModel(context) {
 
@@ -27,16 +27,15 @@ class DrawerViewModel(private val context: Application) : AndroidViewModel(conte
         private set
 
     fun checkUpdate(onUpdate: () -> Unit = {}, onComplete: () -> Unit = {}) {
-        kotlin.runCatching { }
         showToast(context.getString(R.string.text_checking_for_updates))
         viewModelScope.launch {
             try {
-                var releaseInfo = VersionService2.gitUpdateCheckApi.getGithubLastReleaseInfo()
+                var releaseInfo = VersionService2.getGithubLastReleaseInfo()
 
                 var isLatestVersion = releaseInfo.isLatestVersion()
                 if (isLatestVersion == null) {
                     //Get release list
-                    VersionService2.gitUpdateCheckApi.getGithubReleaseInfoList()
+                    VersionService2.getGithubReleaseInfoList()
                         .firstOrNull { it.targetCommitish == "dev-test" && !it.prerelease }?.let {
                             releaseInfo = it
                             isLatestVersion = releaseInfo.isLatestVersion()
@@ -130,8 +129,17 @@ class DrawerViewModel(private val context: Application) : AndroidViewModel(conte
 
     }
 
+    private fun GithubReleaseInfo.isLatestVersion(): Boolean? {
+        if (targetCommitish != "dev-test" || prerelease) return null
+        return (name.replace(".", "")
+            .toLongOrNull() ?: -1) <= BuildConfig.VERSION_NAME.getVersionByName()
+    }
+
+    private fun String.getVersionByName(): Long {
+        return this.replace(".", "").toLongOrNull() ?: -1
+    }
+
     private fun showToast(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
-
 }

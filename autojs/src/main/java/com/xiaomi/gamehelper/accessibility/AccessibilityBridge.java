@@ -1,19 +1,21 @@
 package com.xiaomi.gamehelper.accessibility;
 
+import android.app.ActivityManager;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.os.Build;
-import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.accessibility.AccessibilityWindowInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
+
 import com.stardust.app.AppOpsKt;
-import com.stardust.autojs.core.activity.ActivityInfoProvider;
 import com.stardust.autojs.runtime.accessibility.AccessibilityConfig;
 import com.stardust.util.IntentUtil;
 import com.stardust.util.UiHandler;
+import com.stardust.autojs.core.activity.ActivityInfoProvider;
 import com.stardust.view.accessibility.AccessibilityNotificationObserver;
 import com.stardust.view.accessibility.AccessibilityService;
 
