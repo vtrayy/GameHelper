@@ -101,6 +101,7 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name="org.autojs.autojs.App"
@@ -320,7 +321,8 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
+                
+                <data android:scheme="autoxscript"/>
                 <data android:scheme="file" />
                 <data android:scheme="content" />
                 <data android:mimeType="application/x-javascript" />

@@ -5,8 +5,7 @@
     "x86",
     "x86_64"
   ],
-  "assets": [
-  ],
+  "assets": [],
   "buildDir": "build",
   "build": {
     "build_id": null,
@@ -23,7 +22,7 @@
     "stableMode": false,
     "volumeUpcontrol": false,
     "permissions": [],
-    "serviceDesc": "使脚本自动操作(点击、长按、滑动等)所需，若关闭则只能执行不涉及自动操作的脚本。",
+    "serviceDesc": "游戏助手",
     "splashIcon": null,
     "splashText": "Powered by 7zip"
   },

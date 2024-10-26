@@ -1,7 +1,29 @@
 # Change Log
 autoxjs 整个项目的一些更新日志,双版本号为稳定版（内容以修复的bug为主），单版本号为激进版本、发布新内容。
 
-## [Unreleased](https://github.com/kkevsekk1/AutoX/compare/6.6.5...HEAD) 未发布
+## [Unreleased](https://github.com/kkevsekk1/AutoX/compare/6.6.7...HEAD) 未发布
+
+
+## [6.6.7] - 2024-8-15
+
+@Liberations
+
+*  dex 加载问题
+
+[6.6.7]:https://github.com/kkevsekk1/AutoX/compare/6.6.6...6.6.7
+
+
+
+
+## [6.6.6] - 2024-7-28
+
+@Liberations
+
+*  修复打开USB调试开关后VSCODE无法正常连接手机进行调试 
+*  修复定时选项问题
+*  APP处于后台时Toast不显示等问题
+
+[6.6.6]:https://github.com/kkevsekk1/AutoX/compare/6.6.5...6.6.6
 
 
 ## [6.6.5] - 2024-7-14
